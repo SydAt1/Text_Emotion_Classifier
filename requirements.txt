@@ -1,0 +1,7 @@
+transformers==4.37.0
+tensorflow
+pandas
+scikit-learn
+numpy
+tqdm
+matplotlib
