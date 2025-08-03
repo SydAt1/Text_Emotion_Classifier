@@ -39,7 +39,3 @@ Text_Emotion_Classifier
 - Fine-tune the DistilBERT model using `02_BERT_Model.ipynb`.
 - Train the model by running `src/train.py`.
 - Evaluate the model's performance with `src/evaluate.py`.
-
-## License
-
-This project is licensed under the MIT License.
