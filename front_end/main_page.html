@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Classifier</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 122, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(88, 86, 214, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(175, 82, 222, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+            animation: breathe 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            gap: 60px;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            padding: 12px 24px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .nav-link:hover::before {
+            left: 100%;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #007aff, #5856d6, #af52de);
+            transition: all 0.4s ease;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .nav-link:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.2),
+                0 0 20px rgba(0, 122, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .nav-link:active {
+            transform: translateY(-1px);
+        }
+        
+        /* Main Container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding-top: 80px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Floating Circles */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(0, 122, 255, 0.3), rgba(88, 86, 214, 0.2));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite ease-in-out;
+            z-index: 1;
+        }
+        
+        .circle:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .circle:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            left: 15%;
+            animation-delay: -7s;
+        }
+        
+        .circle:nth-child(3) {
+            width: 180px;
+            height: 180px;
+            top: 30%;
+            right: 15%;
+            animation-delay: -14s;
+        }
+        
+        .circle:nth-child(4) {
+            width: 120px;
+            height: 120px;
+            top: 70%;
+            right: 25%;
+            animation-delay: -3s;
+        }
+        
+        .circle:nth-child(5) {
+            width: 160px;
+            height: 160px;
+            top: 10%;
+            right: 40%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.6;
+            }
+            25% {
+                transform: translate(30px, -50px) rotate(90deg);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translate(-20px, -80px) rotate(180deg);
+                opacity: 0.4;
+            }
+            75% {
+                transform: translate(-50px, -30px) rotate(270deg);
+                opacity: 0.9;
+            }
+        }
+        
+        /* Title */
+        .title {
+            font-size: 56px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 60px;
+            letter-spacing: -1px;
+            z-index: 20;
+            position: relative;
+            background: linear-gradient(135deg, #ffffff 0%, #b3b3b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Input Section */
+        .input-section {
+            position: relative;
+            z-index: 20;
+            transform: translateY(0);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .input-section.floating {
+            transform: translateY(-200px);
+        }
+        
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 4px;
+            box-shadow: 
+                0 0 40px rgba(0, 122, 255, 0.2),
+                0 0 80px rgba(88, 86, 214, 0.1),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .input-container:focus-within {
+            border-color: #007aff;
+            box-shadow: 
+                0 0 60px rgba(0, 122, 255, 0.5),
+                0 0 120px rgba(88, 86, 214, 0.3),
+                0 0 200px rgba(0, 122, 255, 0.1),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 122, 255, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .text-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 400;
+            padding: 18px 24px;
+            width: 500px;
+            font-family: 'SF Pro Display', sans-serif;
+        }
+        
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 300;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 16px 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'SF Pro Display', sans-serif;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Result Display */
+        .result-section {
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+            z-index: 20;
+            position: relative;
+        }
+        
+        .result-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .result-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .emotion-label {
+            font-size: 24px;
+            font-weight: 600;
+            color: #007aff;
+            margin-bottom: 10px;
+        }
+        
+        .confidence {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 40px;
+                margin-bottom: 40px;
+            }
+            
+            .text-input {
+                width: 300px;
+                font-size: 16px;
+                padding: 16px 20px;
+            }
+            
+            .nav-container {
+                gap: 40px;
+            }
+            
+            .circle {
+                opacity: 0.4;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Circles -->
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-link">HOME</a>
+            <a href="#" class="nav-link">ABOUT</a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="title">Emotion Classifier</h1>
+        
+        <div class="input-section" id="inputSection">
+            <div class="input-container">
+                <input type="text" class="text-input" placeholder="Enter Your Sentence" id="textInput">
+                <button class="submit-btn" onclick="classifyEmotion()">Analyze</button>
+            </div>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <div class="result-card">
+                <div class="emotion-label" id="emotionLabel">Happy</div>
+                <div class="confidence" id="confidenceText">Confidence: 87%</div>
+            </div>
+        </div>
+    </div>
+    
+<script>
+    async function classifyEmotion() {
+        const input = document.getElementById('textInput').value.trim();
+        const inputSection = document.getElementById('inputSection');
+        const resultSection = document.getElementById('resultSection');
+        
+        if (!input) {
+            alert('Please enter some text to analyze!');
+            return;
+        }
+
+        // Animate UI
+        inputSection.classList.add('floating');
+        resultSection.classList.remove('show');
+
+        try {
+            // Send POST request to FastAPI backend
+            const response = await fetch('http://127.0.0.1:8000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ texts: [input] })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const prediction = data.predictions[0]; // First item
+
+            // Show top predicted label (first label or Neutral if none)
+            const labels = prediction.predicted_labels.length > 0 ? 
+                           prediction.predicted_labels.join(', ') : 
+                           'Neutral';
+
+            // Find the highest probability for confidence display
+            const probs = prediction.probabilities;
+            const topProb = Math.max(...Object.values(probs)) * 100;
+
+            // Update UI
+            document.getElementById('emotionLabel').textContent = labels;
+            document.getElementById('confidenceText').textContent = 
+                `Top Confidence: ${topProb.toFixed(1)}%`;
+
+            resultSection.classList.add('show');
+
+        } catch (error) {
+            alert('Error fetching prediction: ' + error.message);
+            console.error(error);
+        }
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('textInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            classifyEmotion();
+        }
+    });
+
+    // Reset when input is cleared
+    document.getElementById('textInput').addEventListener('input', function(e) {
+        if (!e.target.value) {
+            document.getElementById('inputSection').classList.remove('floating');
+            document.getElementById('resultSection').classList.remove('show');
+        }
+    });
+</script>
+
+</body>
+</html>
