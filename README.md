@@ -67,6 +67,4 @@ After starting FastAPI, access the API at:
 `http://localhost:8000`
 
 ## Notes
-
-- The cleaned dataset should be saved as `notebooks/preprocessed_go_emotions.csv`.
 - Update file paths in notebooks/scripts if your data location changes.
