@@ -29,7 +29,7 @@ emotion_columns = [
 app = FastAPI(title="Emotion Prediction API")
 
 # Frontend page
-frontend_folder = "../front_end"  # folder where your HTML file lives
+frontend_folder = "../front_end"  # folder where the HTML file is located
 app.mount("/static", StaticFiles(directory=frontend_folder), name="static")
 
 @app.get("/")
